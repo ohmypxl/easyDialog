@@ -1,3 +1,17 @@
+/*
+	easyDialog.inc - Dialogs made easier!
+
+	With this useful include, scripters can easily create
+	dialogs and show them to players.
+
+	This include will prevent dialog spoofing, ID collision
+	and a lot more.
+
+	Created by Emmet on Friday, January 24, 2014.
+
+	Updated by Southclaws 2017-10-13 to add include guard.
+	Updated by pxl 2023-07-13 to do small improvement, keeping SA:MP include alive!.
+*/
 
 #if defined _inc_easyDialog
 	#undef _inc_easyDialog
@@ -37,26 +51,14 @@ forward OnDialogPerformed(playerid, string:dialog[], response, success);
 #define Dialog_Show(%1,%2, Dialog_ShowPlayer(%1,#%2,
 #define Dialog_Open Dialog_ShowPlayer
 
-// Replace old dialog define with enum
+// We do a little bit trolling
 #if !defined DIALOG_STYLE
-	#if defined DIALOG_STYLE_MSGBOX
-		#undef DIALOG_STYLE_MSGBOX
-	#endif
-	#if defined DIALOG_STYLE_INPUT
-		#undef DIALOG_STYLE_INPUT
-	#endif
-	#if defined DIALOG_STYLE_PASSWORD
-		#undef DIALOG_STYLE_PASSWORD
-	#endif
-	#if defined DIALOG_STYLE_LIST
-		#undef DIALOG_STYLE_LIST
-	#endif
-	#if defined DIALOG_STYLE_TABLIST
-		#undef DIALOG_STYLE_TABLIST
-	#endif
-	#if defined DIALOG_STYLE_TABLIST_HEADERS
-		#undef DIALOG_STYLE_TABLIST_HEADERS
-	#endif
+	#undef DIALOG_STYLE_MSGBOX
+	#undef DIALOG_STYLE_INPUT
+	#undef DIALOG_STYLE_PASSWORD
+	#undef DIALOG_STYLE_LIST
+	#undef DIALOG_STYLE_TABLIST
+	#undef DIALOG_STYLE_TABLIST_HEADERS
 
 	enum DIALOG_STYLE {
 		DIALOG_STYLE_MSGBOX,
@@ -66,13 +68,17 @@ forward OnDialogPerformed(playerid, string:dialog[], response, success);
 		DIALOG_STYLE_TABLIST,
 		DIALOG_STYLE_TABLIST_HEADERS,
 	};
+
+	// NOTE: Since we actually do trolling, it's actually **RECOMMENDED** to place it on top of everything (after a_samp)
+	// since we don't know which one is still using ShowPlayerDialog
+	native easyDialog_Show(playerid, dialogid, DIALOG_STYLE:style, const string:caption[], const string:info[], const string:button1[], const string:button2[]) = ShowPlayerDialog;
+	#define ShowPlayerDialog easyDialog_Show
 #endif
 
 static
 	string:Dialog_g_sCurrentName[MAX_PLAYERS][32 char],
 	bool:Dialog_g_sPlayerOpenedDialog[MAX_PLAYERS] = {bool:-1, ...};
 
-native easyDialog_Show(playerid, dialogid, DIALOG_STYLE:style, const string:caption[], const string:info[], const string:button1[], const string:button2[]) = ShowPlayerDialog;
 stock bool:Dialog_ShowPlayer(playerid, const string:dialogName[], DIALOG_STYLE:style, const string:caption[], const string:info[], const string:button1[], const string:button2[] = "", {Float, _}:...)
 {
 	new bool:ret = bool:-1;
@@ -116,11 +122,11 @@ stock bool:Dialog_ShowPlayer(playerid, const string:dialogName[], DIALOG_STYLE:s
 		#emit LCTRL 5
 		#emit SCTRL 4
 
-		ret = !!easyDialog_Show(playerid, 32700, style, caption, strFmt, button1, button2);
+		ret = !!ShowPlayerDialog(playerid, 32700, style, caption, strFmt, button1, button2);
 	}
 	else
 	{
-		ret = !!easyDialog_Show(playerid, 32700, style, caption, info, button1, button2);
+		ret = !!ShowPlayerDialog(playerid, 32700, style, caption, info, button1, button2);
 	}
 
 	Dialog_g_sPlayerOpenedDialog[playerid] = true;
@@ -138,7 +144,7 @@ stock bool:Dialog_Close(playerid)
 	Dialog_g_sCurrentName[playerid]{0} = EOS;
 	Dialog_g_sPlayerOpenedDialog[playerid] = false;
 
-	return !!easyDialog_Show(playerid, -1, DIALOG_STYLE_MSGBOX, " ", " ", " ", "");
+	return !!ShowPlayerDialog(playerid, -1, DIALOG_STYLE_MSGBOX, " ", " ", " ", "");
 }
 
 public OnDialogResponse(playerid, dialogid, response, listitem, string:inputtext[])
